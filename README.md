@@ -223,7 +223,7 @@ food_waste_prediction_system/
     ├── css/
     │   └── style.css          # Custom styles
     ├── js/
-    │   └── charts.js          # Chart configurations
+    │   └── main.js          # Chart configurations
     └── images/                # Image assets
 ```
 
