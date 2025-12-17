@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - {{ app_name }}{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="fas fa-user-cog"></i> User Profile</h1>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Profile Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('auth.update_profile') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" value="{{ current_user.username }}" disabled>
+                        <small class="text-muted">Username cannot be changed</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email }}" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Profile
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">Change Password</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('auth.change_password') }}">
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password *</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">New Password *</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm New Password *</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-key"></i> Change Password
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">Preferences</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('auth.update_preferences') }}">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="alert_frequency" class="form-label">Alert Frequency</label>
+                    <select class="form-select" id="alert_frequency" name="alert_frequency">
+                        <option value="Real-time" {% if preferences and preferences.alert_frequency == 'Real-time' %}selected{% endif %}>Real-time</option>
+                        <option value="Daily" {% if not preferences or preferences.alert_frequency == 'Daily' %}selected{% endif %}>Daily</option>
+                        <option value="Weekly" {% if preferences and preferences.alert_frequency == 'Weekly' %}selected{% endif %}>Weekly</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="waste_threshold" class="form-label">Waste Risk Threshold (%)</label>
+                    <input type="number" class="form-control" id="waste_threshold" name="waste_threshold" min="0" max="100" value="{{ preferences.waste_threshold if preferences else 50 }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {% if not preferences or preferences.email_notifications %}checked{% endif %}>
+                        <label class="form-check-label" for="email_notifications">
+                            Email Notifications
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-save"></i> Update Preferences
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

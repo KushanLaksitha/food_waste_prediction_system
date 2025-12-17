@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Add Food Item - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-plus"></i> Add New Food Item</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('food.add_food_item') }}">
+                    <div class="mb-3">
+                        <label for="household_id" class="form-label">Household *</label>
+                        <select class="form-select" id="household_id" name="household_id" required>
+                            <option value="">Select Household</option>
+                            {% for household in households %}
+                            <option value="{{ household.id }}">{{ household.household_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="item_name" class="form-label">Item Name *</label>
+                        <input type="text" class="form-control" id="item_name" name="item_name" placeholder="e.g., Tomatoes, Rice, Milk" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="category_id" class="form-label">Category *</label>
+                        <select class="form-select" id="category_id" name="category_id" required>
+                            <option value="">Select Category</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.category_name }} ({{ category.perishability_level }} Perishability)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="quantity" class="form-label">Quantity *</label>
+                            <input type="number" step="0.01" class="form-control" id="quantity" name="quantity" placeholder="e.g., 2.5" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="unit" class="form-label">Unit *</label>
+                            <select class="form-select" id="unit" name="unit" required>
+                                <option value="kg">Kilograms (kg)</option>
+                                <option value="g">Grams (g)</option>
+                                <option value="L">Liters (L)</option>
+                                <option value="ml">Milliliters (ml)</option>
+                                <option value="pieces">Pieces</option>
+                                <option value="packets">Packets</option>
+                                <option value="bottles">Bottles</option>
+                                <option value="cans">Cans</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="purchase_date" class="form-label">Purchase Date *</label>
+                            <input type="date" class="form-control" id="purchase_date" name="purchase_date" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="expiry_date" class="form-label">Expiry Date *</label>
+                            <input type="date" class="form-control" id="expiry_date" name="expiry_date" required>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> <strong>Tip:</strong> Enter accurate expiry dates to get better waste predictions!
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Add Food Item
+                        </button>
+                        <a href="{{ url_for('food.list_food_items') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set today's date as default for purchase date
+document.getElementById('purchase_date').valueAsDate = new Date();
+
+// Set minimum date for expiry date (today)
+document.getElementById('expiry_date').min = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}

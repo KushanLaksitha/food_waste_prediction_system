@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Recommendations - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-lightbulb"></i> Recommendations</h1>
+    <a href="{{ url_for('food.view_food_item', item_id=food_item.id) }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Item
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>{{ food_item.item_name }}</h5>
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <p><strong>Quantity:</strong> {{ food_item.quantity }} {{ food_item.unit }}</p>
+                <p><strong>Expires:</strong> {{ food_item.expiry_date.strftime('%Y-%m-%d') }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Days Left:</strong> 
+                    <span class="badge bg-{{ 'danger' if food_item.days_until_expiry <= 3 else ('warning' if food_item.days_until_expiry <= 7 else 'success') }}">
+                        {{ food_item.days_until_expiry }} days
+                    </span>
+                </p>
+                <p><strong>Risk Score:</strong> 
+                    <span class="badge bg-{{ 'danger' if food_item.waste_risk_score|float >= 70 else ('warning' if food_item.waste_risk_score|float >= 40 else 'success') }}">
+                        {{ "%.0f"|format(food_item.waste_risk_score) }}%
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mb-3">Personalized Recommendations</h4>
+<div class="row">
+    {% for rec in recommendations %}
+    <div class="col-md-6 mb-3">
+        <div class="card h-100 border-{{ 'danger' if rec.priority == 1 else ('warning' if rec.priority == 2 else 'info') }}">
+            <div class="card-header bg-{{ 'danger' if rec.priority == 1 else ('warning' if rec.priority == 2 else 'info') }} text-white">
+                <h6 class="mb-0">{{ rec.type }}</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ rec.text }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<h4 class="mt-4 mb-3">General Tips for Reducing Food Waste</h4>
+<div class="card">
+    <div class="card-body">
+        <ul class="list-group list-group-flush">
+            {% for tip in general_tips %}
+            <li class="list-group-item">
+                <i class="fas fa-check-circle text-success me-2"></i>{{ tip }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

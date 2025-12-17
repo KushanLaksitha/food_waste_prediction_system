@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}{{ food_item.item_name }} - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-utensils"></i> {{ food_item.item_name }}</h1>
+    <div>
+        {% if food_item.status == 'Active' %}
+        <a href="{{ url_for('food.edit_food_item', item_id=food_item.id) }}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{{ url_for('prediction.view_recommendations', item_id=food_item.id) }}" class="btn btn-success">
+            <i class="fas fa-lightbulb"></i> Recommendations
+        </a>
+        {% endif %}
+        <a href="{{ url_for('food.list_food_items') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<!-- Status Alert -->
+{% if food_item.days_until_expiry is not none and food_item.days_until_expiry < 0 %}
+<div class="alert alert-danger">
+    <i class="fas fa-exclamation-triangle"></i> <strong>Expired!</strong> This item expired {{ -food_item.days_until_expiry }} day(s) ago.
+</div>
+{% elif food_item.days_until_expiry is not none and food_item.days_until_expiry <= 3 %}
+<div class="alert alert-warning">
+    <i class="fas fa-clock"></i> <strong>Expiring Soon!</strong> This item expires in {{ food_item.days_until_expiry }} day(s).
+</div>
+{% endif %}
+
+<div class="row">
+    <!-- Item Details -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Item Details</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%">Category:</th>
+                        <td><span class="badge bg-secondary">{{ food_item.category.category_name }}</span></td>
+                    </tr>
+                    <tr>
+                        <th>Perishability:</th>
+                        <td><span class="badge bg-{{ 'danger' if food_item.category.perishability_level == 'High' else ('warning' if food_item.category.perishability_level == 'Medium' else 'success') }}">{{ food_item.category.perishability_level }}</span></td>
+                    </tr>
+                    <tr>
+                        <th>Current Quantity:</th>
+                        <td><strong>{{ food_item.quantity }} {{ food_item.unit }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Initial Quantity:</th>
+                        <td>{{ food_item.initial_quantity }} {{ food_item.unit }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th>
+                        <td><span class="badge bg-{{ 'success' if food_item.status == 'Active' else ('info' if food_item.status == 'Consumed' else 'danger') }}">{{ food_item.status }}</span></td>
+                    </tr>
+                    <tr>
+                        <th>Purchase Date:</th>
+                        <td>{{ food_item.purchase_date.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Expiry Date:</th>
+                        <td>{{ food_item.expiry_date.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Days Until Expiry:</th>
+                        <td>
+                            {% if food_item.days_until_expiry is not none %}
+                                {% if food_item.days_until_expiry < 0 %}
+                                    <span class="text-danger"><strong>Expired ({{ -food_item.days_until_expiry }} days ago)</strong></span>
+                                {% else %}
+                                    <span class="text-{{ 'danger' if food_item.days_until_expiry <= 3 else ('warning' if food_item.days_until_expiry <= 7 else 'success') }}">
+                                        {{ food_item.days_until_expiry }} days
+                                    </span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if food_item.status == 'Active' %}
+                    <tr>
+                        <th>Waste Risk Score:</th>
+                        <td>
+                            <span class="badge bg-{{ 'danger' if food_item.waste_risk_score|float >= 70 else ('warning' if food_item.waste_risk_score|float >= 40 else 'success') }}">
+                                {{ "%.0f"|format(food_item.waste_risk_score) }}%
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Consumption Rate:</th>
+                        <td>{{ "%.2f"|format(food_item.consumption_rate) }} {{ food_item.unit }}/day</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consumption History -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Consumption History</h5>
+            </div>
+            <div class="card-body">
+                {% if food_item.consumption_logs %}
+                <div class="list-group">
+                    {% for log in food_item.consumption_logs|sort(attribute='consumption_date', reverse=True) %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ log.quantity_consumed }} {{ food_item.unit }}</strong>
+                                <small class="text-muted d-block">{{ log.consumption_date.strftime('%Y-%m-%d') }}</small>
+                                {% if log.notes %}
+                                <small class="text-muted">{{ log.notes }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No consumption recorded yet.</p>
+                {% endif %}
+
+                {% if food_item.status == 'Active' %}
+                <div class="mt-3">
+                    <a href="{{ url_for('consumption.log_consumption') }}?item_id={{ food_item.id }}" class="btn btn-sm btn-primary w-100">
+                        <i class="fas fa-plus"></i> Log Consumption
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+{% if food_item.status == 'Active' %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#wasteModal">
+                    <i class="fas fa-trash"></i> Mark as Wasted
+                </button>
+            </div>
+            <div class="col-md-4">
+                <button type="button" class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="fas fa-times"></i> Delete Item
+                </button>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ url_for('prediction.view_recommendations', item_id=food_item.id) }}" class="btn btn-success w-100">
+                    <i class="fas fa-lightbulb"></i> Get Recommendations
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Waste Modal -->
+<div class="modal fade" id="wasteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Mark as Wasted</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('food.mark_wasted', item_id=food_item.id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="waste_reason" class="form-label">Reason *</label>
+                        <select class="form-select" id="waste_reason" name="waste_reason" required>
+                            <option value="Expired">Expired</option>
+                            <option value="Spoiled">Spoiled</option>
+                            <option value="Over-purchased">Over-purchased</option>
+                            <option value="Forgot">Forgot</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="estimated_value" class="form-label">Estimated Value (Rs.)</label>
+                        <input type="number" step="0.01" class="form-control" id="estimated_value" name="estimated_value">
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Mark as Wasted</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ food_item.item_name }}</strong>?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('food.delete_food_item', item_id=food_item.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

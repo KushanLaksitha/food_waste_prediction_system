@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Household - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0"><i class="fas fa-edit"></i> Edit Household</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('household.edit_household', household_id=household.id) }}">
+                    <div class="mb-3">
+                        <label for="household_name" class="form-label">Household Name *</label>
+                        <input type="text" class="form-control" id="household_name" name="household_name" value="{{ household.household_name }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="num_members" class="form-label">Number of Members *</label>
+                        <input type="number" class="form-control" id="num_members" name="num_members" min="1" value="{{ household.num_members }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location" value="{{ household.location or '' }}">
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save"></i> Update Household
+                        </button>
+                        <a href="{{ url_for('household.view_household', household_id=household.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

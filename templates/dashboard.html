@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-dashboard"></i> Dashboard</h1>
+    <div>
+        <select class="form-select" onchange="location.href='?household_id=' + this.value">
+            {% for h in households %}
+            <option value="{{ h.id }}" {% if h.id == household.id %}selected{% endif %}>
+                {{ h.household_name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-box"></i> Total Items</h5>
+                <h2>{{ stats.total_items }}</h2>
+                <small>Active food items</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-exclamation-triangle"></i> High Risk</h5>
+                <h2>{{ stats.high_risk_count }}</h2>
+                <small>Items at high risk</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-clock"></i> Expiring Soon</h5>
+                <h2>{{ stats.expiring_soon_count }}</h2>
+                <small>Within 3 days</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-secondary">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-trash"></i> Total Waste</h5>
+                <h2>{{ stats.total_waste_count }}</h2>
+                <small>Rs. {{ "%.2f"|format(stats.total_waste_value) }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Button -->
+<div class="mb-4">
+    <a href="{{ url_for('prediction.calculate_risk', household_id=household.id) }}" class="btn btn-success btn-lg">
+        <i class="fas fa-calculator"></i> Calculate Waste Risk for All Items
+    </a>
+    <a href="{{ url_for('food.add_food_item') }}" class="btn btn-primary btn-lg">
+        <i class="fas fa-plus"></i> Add Food Item
+    </a>
+</div>
+
+<div class="row">
+    <!-- High Risk Items -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-circle"></i> High Risk Items</h5>
+            </div>
+            <div class="card-body">
+                {% if high_risk_items %}
+                <div class="list-group">
+                    {% for item in high_risk_items %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ item.item_name }}</h6>
+                                <small class="text-muted">
+                                    {{ item.quantity }} {{ item.unit }} | 
+                                    Expires: {{ item.expiry_date.strftime('%Y-%m-%d') }}
+                                    {% if item.days_until_expiry is not none %}
+                                    ({{ item.days_until_expiry }} days)
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div>
+                                <span class="badge bg-danger">{{ "%.0f"|format(item.waste_risk_score) }}%</span>
+                                <a href="{{ url_for('prediction.view_recommendations', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-lightbulb"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No high-risk items. Great job!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Expiring Soon -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-hourglass-half"></i> Expiring Soon</h5>
+            </div>
+            <div class="card-body">
+                {% if expiring_soon %}
+                <div class="list-group">
+                    {% for item in expiring_soon %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ item.item_name }}</h6>
+                                <small class="text-muted">
+                                    {{ item.quantity }} {{ item.unit }} | 
+                                    {{ item.expiry_date.strftime('%Y-%m-%d') }}
+                                    ({{ item.days_until_expiry }} day{% if item.days_until_expiry != 1 %}s{% endif %})
+                                </small>
+                            </div>
+                            <a href="{{ url_for('food.view_food_item', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                View
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No items expiring soon.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Alerts -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-bell"></i> Recent Alerts</h5>
+            </div>
+            <div class="card-body">
+                {% if unread_alerts %}
+                <div class="list-group">
+                    {% for alert in unread_alerts %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-{{ 'danger' if alert.alert_type == 'High Risk' or alert.alert_type == 'Expired' else 'warning' }}">
+                                    {{ alert.alert_type }}
+                                </span>
+                                <p class="mb-1 mt-2">{{ alert.alert_message }}</p>
+                                <small class="text-muted">{{ alert.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <form method="POST" action="{{ url_for('prediction.mark_alert_read', alert_id=alert.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('prediction.list_alerts') }}" class="btn btn-sm btn-outline-primary">View All Alerts</a>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No unread alerts.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Waste -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-trash-alt"></i> Recent Waste Records</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_waste %}
+                <div class="list-group">
+                    {% for waste in recent_waste %}
+                    <div class="list-group-item">
+                        <h6 class="mb-1">{{ waste.food_item.item_name }}</h6>
+                        <small class="text-muted">
+                            {{ waste.quantity_wasted }} {{ waste.food_item.unit }} | 
+                            {{ waste.waste_reason }} | 
+                            {{ waste.waste_date.strftime('%Y-%m-%d') }}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No waste records yet. Keep it up!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

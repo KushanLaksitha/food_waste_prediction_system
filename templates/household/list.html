@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}My Households - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-home"></i> My Households</h1>
+    <a href="{{ url_for('household.create_household') }}" class="btn btn-success">
+        <i class="fas fa-plus"></i> Create Household
+    </a>
+</div>
+
+{% if households %}
+<div class="row">
+    {% for household in households %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-home text-success"></i> {{ household.household_name }}
+                </h5>
+                <p class="card-text">
+                    <i class="fas fa-users"></i> <strong>Members:</strong> {{ household.num_members }}<br>
+                    {% if household.location %}
+                    <i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> {{ household.location }}<br>
+                    {% endif %}
+                    <i class="fas fa-calendar"></i> <strong>Created:</strong> {{ household.created_at.strftime('%Y-%m-%d') }}
+                </p>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="btn-group w-100" role="group">
+                    <a href="{{ url_for('household.view_household', household_id=household.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                    <a href="{{ url_for('household.edit_household', household_id=household.id) }}" class="btn btn-outline-warning">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ household.id }}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="modal fade" id="deleteModal{{ household.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Deletion</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete <strong>{{ household.household_name }}</strong>?</p>
+                        <p class="text-danger"><i class="fas fa-exclamation-triangle"></i> This will also delete all food items, consumption logs, and waste records associated with this household.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form method="POST" action="{{ url_for('household.delete_household', household_id=household.id) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-home fa-4x text-muted mb-3"></i>
+    <h3>No Households Yet</h3>
+    <p class="text-muted">Create your first household to start tracking food waste.</p>
+    <a href="{{ url_for('household.create_household') }}" class="btn btn-success btn-lg">
+        <i class="fas fa-plus"></i> Create Household
+    </a>
+</div>
+{% endif %}
+{% endblock %}
